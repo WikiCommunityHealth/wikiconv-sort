@@ -2,6 +2,14 @@
 
 Crunch the WikiConv dataset.
 
+## Usage Example
+
+```bash
+$ python3 -m wikiconv-crunch --output-compression gzip \
+      input/WikiConv/wikiconv-en-*.gz output \
+      filter-pageid --start-id 0 --end-id 200000
+```
+
 ## License
 
 This project is realease unde GPL v3 (or later).
