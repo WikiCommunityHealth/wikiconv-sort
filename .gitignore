@@ -1,7 +1,8 @@
 # ignore inpunt/output directory, logs directory and misc
-input
 input/*
+!input/.gitkeep
 output/*
+!output/.gitkeep
 logs/*
 misc/*
 
