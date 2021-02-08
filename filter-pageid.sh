@@ -120,13 +120,16 @@ echoverbose "NARGS: $NARGS"
 echoverbose "OPTIND: $OPTIND"
 echoverbose "INPUT_ARR:"
 for arr in "${INPUT_ARR[@]}"; do
-   echoverbose "  - $arr"
+  echoverbose "  - $arr"
 done
 echoverbose "OUTPUT: $OUTPUT"
 
 #   activate pyenv
 set +u
-source "$HOME"/.pyenv/versions/3.8.2/envs/wikiconv/bin/activate
+export PATH="$HOME/.pyenv/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+pyenv activate wikiconv 2>/dev/null
 set -u
 
 echoverbose "VIRTUAL_ENV: $VIRTUAL_ENV"
