@@ -8,7 +8,7 @@ from . import processors, utils, file_utils
 def get_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        prog='graphsnapshot',
+        prog='wikiconv-crunch',
         description='Graph snapshot features extractor.',
     )
     parser.add_argument(
