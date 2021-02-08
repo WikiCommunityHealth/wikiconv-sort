@@ -85,8 +85,7 @@ if $debug; then verbose=true; fi
 
 if $debug; then
   echodebug() {
-    (>&2 echo -en "[$(date '+%F %H:%M:%S')][debug]\t" "$@" )
-    )
+    (>&2 echo -e "[$(date '+%F %H:%M:%S')][debug]\t" "$@" )
   }
 else
   echodebug() { true; }
@@ -94,7 +93,7 @@ fi
 
 if $verbose; then
   echoverbose() {
-    (>&2 echo -en "[$(date '+%F %H:%M:%S')][info]\t" "$@" 1>&2;)
+    (>&2 echo -e "[$(date '+%F %H:%M:%S')][info]\t" "$@" 1>&2;)
   }
 else
   echoverbose() { true; }
@@ -126,8 +125,9 @@ done
 echoverbose "OUTPUT: $OUTPUT"
 
 #   activate pyenv
-eval "$($HOME/.pyenv/bin/pyenv init -)"
-$HOME/.pyenv/bin/pyenv activate wikiconv 2>/dev/null
+set +u
+source "$HOME"/.pyenv/versions/3.8.2/envs/wikiconv/bin/activate
+set -u
 
 echoverbose "VIRTUAL_ENV: $VIRTUAL_ENV"
   
