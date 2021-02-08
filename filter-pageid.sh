@@ -13,7 +13,7 @@ SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 function short_usage() {
   (>&2 echo \
 "Usage:
-  $SCRIPTNAME [options]
+  $SCRIPTNAME [options] <input>... <output>
   $SCRIPTNAME -h
 ")
 }
@@ -145,10 +145,12 @@ for id in $(seq "$START_ID" "$STEP" "$END_ID"); do
 	echoverbose "start_id: $sid - end_id $eid"
 
   if $debug; then set -x; fi
-	run python3 -m wikiconv-crunch --output-compression gzip \
-    "${INPUT_ARR[@]}" "$OUTPUT" \
-	  filter-pageid --start-id "$sid" --end-id "$eid"
-
+  (
+    cd "$SCRIPTDIR"
+    run python3 -m wikiconv-crunch --output-compression gzip \
+      "${INPUT_ARR[@]}" "$OUTPUT" \
+	    filter-pageid --start-id "$sid" --end-id "$eid"
+  )
 done
 
 exit 0
