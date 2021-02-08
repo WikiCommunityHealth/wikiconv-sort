@@ -127,8 +127,8 @@ done
 echoverbose "OUTPUT: $OUTPUT"
 
 # activate pyenv
-eval "$(pyenv init -)"
-pyenv activate wikiconv 2>/dev/null
+eval "$("$HOME"/.pyenv/bin/pyenv init -)"
+"$HOME"/.pyenv/bin/pyenv activate wikiconv 2>/dev/null
 
 echoverbose "VIRTUAL_ENV: $VIRTUAL_ENV"
 
