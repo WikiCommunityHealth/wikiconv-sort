@@ -121,10 +121,18 @@ def main(
     output = open(os.devnull, 'wt')
     stats_output = open(os.devnull, 'wt')
     if not args.dry_run:
+        varname = ('{basename}.{func}.{start_id:08d}-{end_id:08d}'
+                   .format(basename=basename,
+                           func='filter-pageid',
+                           start_id=args.start_id,
+                           end_id=args.end_id
+                           )
+                   )
+
         output_filename = str(args.output_dir_path /
-                              (basename + '.filtered.json'))
+                              (varname + '.json'))
         stats_filename = str(args.output_dir_path /
-                             (basename + '.stats.xml'))
+                             (varname + '.stats.xml'))
 
         output = fu.output_writer(
             path=output_filename,
