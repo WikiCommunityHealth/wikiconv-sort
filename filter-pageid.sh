@@ -85,8 +85,8 @@ if $debug; then verbose=true; fi
 
 if $debug; then
   echodebug() {
-    echo -en "[$(date '+%F %H:%M:%S')][debug]\t";
-    echo "$@" 1>&2;
+    (>&2 echo -en "[$(date '+%F %H:%M:%S')][debug]\t" "$@" )
+    )
   }
 else
   echodebug() { true; }
@@ -94,8 +94,7 @@ fi
 
 if $verbose; then
   echoverbose() {
-    echo -en "[$(date '+%F %H:%M:%S')][info]\t";
-    echo "$@" 1>&2;
+    (>&2 echo -en "[$(date '+%F %H:%M:%S')][info]\t" "$@" 1>&2;)
   }
 else
   echoverbose() { true; }
@@ -126,12 +125,12 @@ for arr in "${INPUT_ARR[@]}"; do
 done
 echoverbose "OUTPUT: $OUTPUT"
 
-# activate pyenv
-eval "$("$HOME"/.pyenv/bin/pyenv init -)"
-"$HOME"/.pyenv/bin/pyenv activate wikiconv 2>/dev/null
+#   activate pyenv
+eval "$($HOME/.pyenv/bin/pyenv init -)"
+$HOME/.pyenv/bin/pyenv activate wikiconv 2>/dev/null
 
 echoverbose "VIRTUAL_ENV: $VIRTUAL_ENV"
-
+  
 START_ID=0
 STEP=2000000
 END_ID=$((20000000-1))
