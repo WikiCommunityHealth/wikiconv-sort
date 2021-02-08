@@ -26,6 +26,7 @@ Launch filter-pageid.
 
 Options:
   -v            Show verbose information.
+  -n            Do not run any command.
   -h            Show this help and exits.
 
 Example:
@@ -34,12 +35,20 @@ Example:
 }
 
 help_flag=false
+debug=false
+dry_run=false
 verbose=false
 
-while getopts ":hv" opt; do
+while getopts ":dhnv" opt; do
   case $opt in
+    d)
+      debug=true
+      ;;
     h)
       help_flag=true
+      ;;
+    n)
+      dry_run=true
       ;;
     v)
       verbose=true
@@ -59,12 +68,33 @@ if $help_flag; then
   usage
   exit 0
 fi
+
+if $dry_run; then
+  function run() {
+    true -- "$@"
+  }
+else
+  function run() {
+    "$@"
+  }
+fi
 #################### end: help
 
 #################### utils
+if $debug; then verbose=true; fi
+
+if $debug; then
+  echodebug() {
+    echo -en "[$(date '+%F %H:%M:%S')][debug]\t";
+    echo "$@" 1>&2;
+  }
+else
+  echodebug() { true; }
+fi
+
 if $verbose; then
-  echoverbose() { 
-    echo -en "[$(date '+%F %H:%M:%S')][verbose]\t";
+  echoverbose() {
+    echo -en "[$(date '+%F %H:%M:%S')][info]\t";
     echo "$@" 1>&2;
   }
 else
@@ -107,13 +137,18 @@ STEP=2000000
 END_ID=$((20000000-1))
 
 for id in $(seq "$START_ID" "$STEP" "$END_ID"); do
-	start_id="$id"
-	end_id="$((id+STEP))"
+  sid="$id"
+  if [ "$id" -ne 0 ]; then
+    sid="$((id+1))"
+  fi
+	eid="$((id+STEP))"
 
-	echoverbose "start_id: $start_id - end_id $end_id"
-	python3 -m wikiconv-crunch --output-compression gzip \
+	echoverbose "start_id: $sid - end_id $eid"
+
+  if $debug; then set -x; fi
+	run python3 -m wikiconv-crunch --output-compression gzip \
     "${INPUT_ARR[@]}" "$OUTPUT" \
-	  filter-pageid --start-id "$start_id" --end-id "$end_id"
+	  filter-pageid --start-id "$sid" --end-id "$eid"
 
 done
 
