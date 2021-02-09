@@ -153,6 +153,7 @@ def main(
 
     for obj in res:
         output.write(json.dumps(obj))
+        output.write("\n")
 
     stats['performance']['end_time'] = datetime.datetime.utcnow()
 
