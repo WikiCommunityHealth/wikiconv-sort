@@ -7,8 +7,32 @@ if ! $SOURCED; then
   IFS=$'\n\t'
 fi
 
+#################### utils
+function check_int() {
+  local re='^[0-9]+$'
+  local mynum="$1"
+  local option="$2"
+
+  if ! [[ "$mynum" =~ $re ]] ; then
+     (echo -n "Error in option '$option': " >&2)
+     (echo "must be an integer, got $mynum." >&2)
+     exit 1
+  fi
+
+  if ! [ "$mynum" -ge 0 ] ; then
+     (echo "Error in option '$option': must be integer, got $mynum." >&2)
+     exit 1
+  fi
+}
+#################### end: utils
+
+
 SCRIPTNAME="$(basename "$0")"
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+START_ID=0
+STEP=2000000
+END_ID=20000000
 #################### help
 function short_usage() {
   (>&2 echo \
@@ -25,9 +49,12 @@ function usage() {
 Launch filter-pageid.
 
 Options:
-  -v            Show verbose information.
-  -n            Do not run any command.
-  -h            Show this help and exits.
+  -v                Show verbose information.
+  -n                Do not run any command.
+  -s START_ID       Start id [default: $START_ID].
+  -e END_ID         End id [default: $END_ID].
+  -p STEP           Step id [default: $STEP].
+  -h                Show this help and exits.
 
 Example:
   $SCRIPTNAME"
@@ -39,8 +66,17 @@ debug=false
 dry_run=false
 verbose=false
 
-while getopts ":dhnv" opt; do
+# default
+start_id="$START_ID"
+end_id="$END_ID"
+step="$STEP"
+
+while getopts ":e:dhnp:s:v" opt; do
   case $opt in
+    e)
+      check_int "$OPTARG" '-e'
+      end_id="$OPTARG"
+      ;;
     d)
       debug=true
       ;;
@@ -49,6 +85,14 @@ while getopts ":dhnv" opt; do
       ;;
     n)
       dry_run=true
+      ;;
+    p)
+      check_int "$OPTARG" '-p'
+      step="$OPTARG"
+      ;;
+    s)
+      check_int "$OPTARG" '-t'
+      start_id="$OPTARG"
       ;;
     v)
       verbose=true
@@ -133,19 +177,23 @@ pyenv activate wikiconv 2>/dev/null
 set -u
 
 echoverbose "VIRTUAL_ENV: $VIRTUAL_ENV"
-  
-START_ID=0
-STEP=2000000
-END_ID=$((20000000-1))
 
-for id in $(seq "$START_ID" "$STEP" "$END_ID"); do
+echoverbose "Options:"
+echoverbose "  - start_id: $start_id"
+echoverbose "  - end_id: $end_id"
+echoverbose "  - step: $step:"
+
+for id in $(seq "$start_id" "$step" "$end_id"); do
   sid="$id"
-  if [ "$id" -ne 0 ]; then
+  if [ "$id" -ne "$start_id" ]; then
     sid="$((id+1))"
   fi
-	eid="$((id+STEP))"
+  if [ "$sid" -ge "$end_id" ]; then
+    break;
+  fi
+	eid="$((id+step))"
 
-	echoverbose "start_id: $sid - end_id $eid"
+	echoverbose "sid: $sid - eid $eid"
 
   if $debug; then set -x; fi
   (
@@ -154,6 +202,7 @@ for id in $(seq "$START_ID" "$STEP" "$END_ID"); do
       "${INPUT_ARR[@]}" "$OUTPUT" \
 	    filter-pageid --start-id "$sid" --end-id "$eid"
   )
+
 done
 
 exit 0
