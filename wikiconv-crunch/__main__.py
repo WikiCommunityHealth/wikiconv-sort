@@ -55,25 +55,7 @@ def main():
     if not args.output_dir_path.exists():
         args.output_dir_path.mkdir(parents=True)
 
-    for input_file_path in args.files:
-        utils.log("Analyzing {}...".format(input_file_path))
-
-        dump = file_utils.open_jsonobjects_file(str(input_file_path))
-
-        # get filename without the extension
-        # https://stackoverflow.com/a/47496703/2377454
-        basename = input_file_path.stem
-
-        args.func(
-            dump,
-            basename,
-            args,
-        )
-
-        # explicitly close input files
-        dump.close()
-
-        utils.log("Done Analyzing {}.".format(input_file_path))
+    args.func(args.files, args)
 
 
 if __name__ == '__main__':

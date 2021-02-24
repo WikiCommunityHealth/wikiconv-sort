@@ -8,6 +8,7 @@ import os
 import json
 import argparse
 import datetime
+import math
 
 from typing import Iterable, Iterator, Mapping
 
@@ -15,6 +16,8 @@ from .. import file_utils as fu
 from .. import dumper
 from .. import types
 from .. import utils
+from .. import file_utils
+
 
 from operator import itemgetter
 from pprint import pprint
@@ -43,33 +46,22 @@ stats_template = '''
 
 def process_lines(
         dump: Iterable[list],
-        ids: Iterable[set],
-        stats: Mapping) -> Iterator[list]:
-    """Assign each revision to the snapshot or snapshots to which they
-       belong.
+        outFiles: Iterable[list],
+        bucketSize: int):
+    """ Assign each revision to the snapshot or snapshots to which they
+        belong.
     """
-
-    filtered_objs = list()
+    nobjs = 0
     for raw_obj in dump:
         obj = types.cast_json(raw_obj)
+        obj["timestamp"] = obj["timestamp"].isoformat()
+        bucketN = math.floor(obj['pageId'] / bucketSize)
+        
+        outFiles[bucketN].write(f"{obj['pageId']}\t{obj['timestamp']}\t{json.dumps(obj)}\n")
 
-        stats['performance']['input']['objects'] += 1
-        if obj['pageId'] in ids:
-            filtered_objs.append(obj)
-            stats['performance']['input']['filtered'] += 1
-
-        nobjs = stats['performance']['input']['objects']
         if (nobjs-1) % NPRINTREVISION == 0:
             utils.dot()
-
-    stats['performance']['sort']['start_time'] = datetime.datetime.utcnow()
-    filtered_objs.sort(key=itemgetter('pageId', 'timestamp'))
-    stats['performance']['sort']['end_time'] = datetime.datetime.utcnow()
-
-    for obj in filtered_objs:
-        obj["timestamp"] = obj["timestamp"].isoformat()
-
-        yield obj
+        nobjs += 1
 
 
 def configure_subparsers(subparsers):
@@ -95,71 +87,34 @@ def configure_subparsers(subparsers):
 
 
 def main(
-        dump: Iterable[list],
-        basename: str,
+        input_files: Iterable[list],
         args: argparse.Namespace) -> None:
     """Main function that parses the arguments and writes the output."""
-    stats = {
-        'performance': {
-            'start_time': None,
-            'end_time': None,
-            'input': {
-                'objects': 0,
-                'filtered': 0
-            },
-            'sort': {
-                'start_time': None,
-                'end_time': None,
-            }
-        },
-    }
-    stats['performance']['start_time'] = datetime.datetime.utcnow()
+
 
     assert (args.start_id < args.end_id), \
-           "Start ID must be smaller than end ID"
+            "Start ID must be smaller than end ID"
 
-    output = open(os.devnull, 'wt')
-    stats_output = open(os.devnull, 'wt')
-    if not args.dry_run:
-        varname = ('{basename}.{func}.{start_id:08d}-{end_id:08d}'
-                   .format(basename=basename,
-                           func='filter-pageid',
-                           start_id=args.start_id,
-                           end_id=args.end_id
-                           )
-                   )
+    # OUTPUT FILES
+    nrOfPages = 100000000
+    bucketSize = 10000000
+    filesNames = [str(args.output_dir_path / (f"pippo-{i}.json")) for i in range(math.ceil(nrOfPages / bucketSize))]
+    outFiles = [fu.output_writer(
+                    path=filename,
+                    compression=args.output_compression,
+                ) for filename in filesNames]
 
-        output_filename = str(args.output_dir_path /
-                              (varname + '.json'))
-        stats_filename = str(args.output_dir_path /
-                             (varname + '.stats.xml'))
+    # Analize dump
+    for input_file_path in args.files:
+        utils.log(f"Analyzing {input_file_path}...")
+        dump = file_utils.open_jsonobjects_file(str(input_file_path))
 
-        output = fu.output_writer(
-            path=output_filename,
-            compression=args.output_compression,
-        )
-        stats_output = fu.output_writer(
-            path=stats_filename,
-            compression=args.output_compression,
-        )
+        process_lines(dump, outFiles, bucketSize)
+        dump.close()
+        utils.log(f"Done Analyzing {input_file_path}.")
 
-    ids = set(range(args.start_id, args.end_id+1))
-
-    res = process_lines(
-        dump,
-        ids=ids,
-        stats=stats,
-    )
-
-    for obj in res:
-        output.write(json.dumps(obj))
-        output.write("\n")
-
-    stats['performance']['end_time'] = datetime.datetime.utcnow()
-
-    with stats_output:
-        dumper.render_template(
-            stats_template,
-            stats_output,
-            stats=stats,
-        )
+    # Sort files
+    for filename in filesNames:
+        utils.log(f"Sorting {filename}")
+        os.system(f"sort {filename} -o {filename.replace('pippo', 'pluto')}")
+        utils.log(f"Done sorting {filename}")
