@@ -1,14 +1,13 @@
 import os
 import json
 import math
-import datetime
+from datetime import datetime
 import concurrent.futures
 
 from pathlib import Path
 from typing import Iterable, Mapping
 
 from . import file_utils
-from . import types
 from . import utils
 
 EXTENSIONS = {
@@ -19,37 +18,11 @@ EXTENSIONS = {
 }
 NPRINTREVISION = 10000
 
-
-def processFile(inputFilename: str, outFiles: list, bucketSize: int, outputPath: str, compression: str) -> None:
-    nobjs = 0
-    dump = file_utils.open_jsonobjects_file(str(inputFilename))
-    for raw_obj in dump:
-        obj = types.cast_json(raw_obj)
-        obj["timestamp"] = obj["timestamp"].isoformat()
-        bucketNumber = math.floor(obj['pageId'] / bucketSize)
-
-        if bucketNumber >= len(outFiles):
-            outputFilesNames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(len(outFiles), bucketNumber + 1)]
-            outputFiles = [file_utils.output_writer(path=filename, compression=compression) for filename in outputFilesNames]
-            outFiles.extend(outputFiles)
-
-        outFiles[bucketNumber].write(f"{comparatorString(obj)}\t{json.dumps(obj)}\n")
-
-        if (nobjs-1) % NPRINTREVISION == 0:
-            utils.dot()
-        nobjs += 1
-
-    dump.close()
-
-    for f in outFiles:
-        f.close()
-    return outputFilesNames
-
 def comparatorString(obj: Mapping) -> str:
     idSegments = obj['id'].split('.')
 
-    par0 = str(obj['pageId']).zfill(9)
-    par1 = str(obj['timestamp'])
+    par0 = obj['pageId'].zfill(9)
+    par1 = obj['timestamp']
     par2 = idSegments[1].zfill(8)
     par3 = idSegments[2].zfill(8)
     
@@ -61,6 +34,8 @@ def sortFiles(
         bucketSize: int,
         compression: str,
     ) -> None:
+
+    print(datetime.now().strftime("%H:%M:%S"))
 
     # outputFilesNames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(math.ceil(nrOfPages / bucketSize))]
     # outputFiles = [file_utils.output_writer(path=filename, compression=compression) for filename in outputFilesNames]
@@ -75,15 +50,15 @@ def sortFiles(
         dump = file_utils.open_jsonobjects_file(str(inputFile))
 
         #process line
-        for raw_obj in dump:
-            obj = types.cast_json(raw_obj)
-            obj["timestamp"] = obj["timestamp"].isoformat()
-            bucketNumber = math.floor(obj['pageId'] / bucketSize)
+        for obj in dump:
+            #obj = types.cast_json(raw_obj)
+            #obj["timestamp"] = obj["timestamp"].isoformat()
+
+            bucketNumber = math.floor(int(obj['pageId']) / bucketSize)
 
             if bucketNumber >= len(outputFiles):
                 newFilenames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(len(outputFiles), bucketNumber + 1)]
                 newOutputFiles = [file_utils.output_writer(path=filename, compression=compression) for filename in newFilenames]
-
                 outputFilesNames.extend(newFilenames)
                 outputFiles.extend(newOutputFiles)
 
@@ -94,7 +69,7 @@ def sortFiles(
             nobjs += 1
 
         dump.close()
-        utils.log(f"Done Analyzing {inputFile}.")
+        utils.log(f"Done Analyzing {inputFile}.\n")
         print(datetime.now().strftime("%H:%M:%S"))
 
 
@@ -112,6 +87,8 @@ def sortFiles(
     # for filename in outputFilesNames:
     #     sort(filename, compression)
 
+    print(datetime.now().strftime("%H:%M:%S"))
+
 
 def sort(filename: str, compression: str):
     filename += '.' + compression
@@ -124,4 +101,4 @@ def sort(filename: str, compression: str):
         compressor = 'gzip'
         #os.system(f"{' '.join(compressCat)} {filename} | sort -o {filename.replace('bucket', 'sorted-bucket')}")
         os.system(f"{' '.join(compressCat)} {filename} | sort | {compressor} > {filename.replace('bucket', 'sorted-bucket')}")
-    utils.log(f"Done sorting {filename}")
+    utils.log(f"Done sorting {filename}\n")
