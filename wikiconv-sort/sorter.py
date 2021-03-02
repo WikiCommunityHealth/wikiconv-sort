@@ -103,22 +103,21 @@ def sortFiles(
         f.close()
 
 
-
-
     # Sort files
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         # executor.map(sort, outputFilesNames)
         executor.map(lambda f: sort(f, compression), outputFilesNames)
         #executor.submit()
 
-    #for filename in outputFilesNames:
-    #    sort(filename)
+    # for filename in outputFilesNames:
+    #     sort(filename, compression)
 
 
 def sort(filename: str, compression: str):
-    compressed = True
+    filename += '.' + compression
+
     utils.log(f"Sorting {filename}")
-    if compressed is None:
+    if compression is None:
         os.system(f"sort {filename} -o {filename.replace('bucket', 'sorted-bucket')}")
     else:
         compressCat = EXTENSIONS.get(compression, ['cat'])
