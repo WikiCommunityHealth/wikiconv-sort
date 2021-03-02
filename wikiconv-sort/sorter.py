@@ -1,16 +1,22 @@
 import os
 import json
 import math
-import threading
+import datetime
 import concurrent.futures
+
 from pathlib import Path
 from typing import Iterable, Mapping
 
 from . import file_utils
 from . import types
 from . import utils
-from . import file_utils
 
+EXTENSIONS = {
+    'gz': ["zcat"],
+    'bz2': ["bzcat"],
+    '7z': ["7z", "e", "-so"],
+    'lzma': ["lzcat"]
+}
 NPRINTREVISION = 10000
 
 
@@ -89,6 +95,7 @@ def sortFiles(
 
         dump.close()
         utils.log(f"Done Analyzing {inputFile}.")
+        print(datetime.now().strftime("%H:%M:%S"))
 
 
     # Closing output files
@@ -100,13 +107,22 @@ def sortFiles(
 
     # Sort files
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-        executor.map(sort, outputFilesNames)
+        # executor.map(sort, outputFilesNames)
+        executor.map(lambda f: sort(f, compression), outputFilesNames)
+        #executor.submit()
 
     #for filename in outputFilesNames:
     #    sort(filename)
 
 
-def sort(filename: str):
+def sort(filename: str, compression: str):
+    compressed = True
     utils.log(f"Sorting {filename}")
-    os.system(f"sort {filename} -o {filename.replace('bucket', 'sorted-bucket')}")
+    if compressed is None:
+        os.system(f"sort {filename} -o {filename.replace('bucket', 'sorted-bucket')}")
+    else:
+        compressCat = EXTENSIONS.get(compression, ['cat'])
+        compressor = 'gzip'
+        #os.system(f"{' '.join(compressCat)} {filename} | sort -o {filename.replace('bucket', 'sorted-bucket')}")
+        os.system(f"{' '.join(compressCat)} {filename} | sort | {compressor} > {filename.replace('bucket', 'sorted-bucket')}")
     utils.log(f"Done sorting {filename}")
