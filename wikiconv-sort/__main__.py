@@ -2,8 +2,7 @@
 import argparse
 import pathlib
 
-from . import processors, utils, file_utils
-
+from . import sorter
 
 def get_args():
     """Parse command line arguments."""
@@ -36,15 +35,16 @@ def get_args():
         action='store_true',
         help="Don't write any file",
     )
+    parser.add_argument(
+        '--bucket-size',
+        type=int,
+        required=False,
+        default=200000,
+        help='Bucket size'
+    )
 
-    subparsers = parser.add_subparsers(help='sub-commands help')
-    processors.pageid_filter.configure_subparsers(subparsers)
 
     parsed_args = parser.parse_args()
-    if 'func' not in parsed_args:
-        parser.print_usage()
-        parser.exit(1)
-
     return parsed_args
 
 
@@ -55,7 +55,12 @@ def main():
     if not args.output_dir_path.exists():
         args.output_dir_path.mkdir(parents=True)
 
-    args.func(args.files, args)
+    sorter.sortFiles(
+        inputFiles=args.files,
+        outputPath=args.output_dir_path,
+        bucketSize=args.bucket_size,
+        compression=args.output_compression
+    )
 
 
 if __name__ == '__main__':

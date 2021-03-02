@@ -19,7 +19,7 @@ def open_csv_file(path: Union[str, IO]):
     return f
 
 
-def open_jsonobjects_file(path: Union[str, IO]):
+def open_jsonobjects_file(path: Union[str, IO]) -> list:
     """Open a file of JSON object, one per line,
        decompressing it if necessary."""
     f = cs.functions.open_file(
