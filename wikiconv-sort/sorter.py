@@ -74,42 +74,42 @@ def sortFiles(
     outputFilesNames = []
     outputFiles = []
 
-    # Split dump
-    for inputFile in inputFiles:
-        utils.log(f"Analyzing {inputFile}...")
+    # # Split dump
+    # for inputFile in inputFiles:
+    #     utils.log(f"Analyzing {inputFile}...")
 
-        nobjs = 0
-        dump = file_utils.open_jsonobjects_file(str(inputFile))
+    #     nobjs = 0
+    #     dump = file_utils.open_jsonobjects_file(str(inputFile))
 
-        #process line
-        for obj in dump:
-            #obj = types.cast_json(raw_obj)
-            #obj["timestamp"] = obj["timestamp"].isoformat()
+    #     #process line
+    #     for obj in dump:
+    #         #obj = types.cast_json(raw_obj)
+    #         #obj["timestamp"] = obj["timestamp"].isoformat()
 
-            bucketNumber = getBucketNumberByPage(obj, bucketSize)
+    #         bucketNumber = getBucketNumberByPage(obj, bucketSize)
 
-            if bucketNumber >= len(outputFiles):
-                newFilenames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(len(outputFiles), bucketNumber + 1)]
-                newOutputFiles = [file_utils.output_writer(path=filename, compression=compression) for filename in newFilenames]
-                outputFilesNames.extend(newFilenames)
-                outputFiles.extend(newOutputFiles)
+    #         if bucketNumber >= len(outputFiles):
+    #             newFilenames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(len(outputFiles), bucketNumber + 1)]
+    #             newOutputFiles = [file_utils.output_writer(path=filename, compression=compression) for filename in newFilenames]
+    #             outputFilesNames.extend(newFilenames)
+    #             outputFiles.extend(newOutputFiles)
 
-            outputFiles[bucketNumber].write(f"{comparatorStringByPage(obj)}\t{json.dumps(obj)}\n")
+    #         outputFiles[bucketNumber].write(f"{comparatorStringByPage(obj)}\t{json.dumps(obj)}\n")
 
-            if (nobjs-1) % NPRINTREVISION == 0:
-                utils.dot()
-            nobjs += 1
+    #         if (nobjs-1) % NPRINTREVISION == 0:
+    #             utils.dot()
+    #         nobjs += 1
 
-        dump.close()
-        utils.log(f"Done Analyzing {inputFile}.\n")
-        print(datetime.now().strftime("%H:%M:%S"))
-
-
-    # Closing output files
-    for f in outputFiles:
-        f.close()
+    #     dump.close()
+    #     utils.log(f"Done Analyzing {inputFile}.\n")
+    #     print(datetime.now().strftime("%H:%M:%S"))
 
 
+    # # Closing output files
+    # for f in outputFiles:
+    #     f.close()
+
+    outputFilesNames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(197)]
     # Sort files
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         # executor.map(sort, outputFilesNames)
@@ -123,12 +123,12 @@ def sortFiles(
 
 
 def sort(filename: str, compression: str):
-    filename += '.' + compression
 
     utils.log(f"Sorting {filename}")
     if compression is None:
         os.system(f"sort {filename} -o {filename.replace('bucket', 'sorted-bucket')}")
     else:
+        filename += '.' + compression
         compressCat = EXTENSIONS.get(compression, ['cat'])
         compressor = 'gzip'
         #os.system(f"{' '.join(compressCat)} {filename} | sort -o {filename.replace('bucket', 'sorted-bucket')}")
