@@ -113,8 +113,6 @@ def sortFiles(
             if (nobjs-1) % NPRINTREVISION == 0:
                 utils.dot()
             nobjs += 1
-            if nobjs > 100000:
-                break
 
         dump.close()
         printTimestamp(outputPath, f"Done Analyzing {inputFile}.")
