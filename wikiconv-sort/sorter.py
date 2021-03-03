@@ -77,7 +77,7 @@ def sortFiles(
         sortBy: str
     ) -> None:
 
-    print(datetime.now().strftime("%H:%M:%S"))
+    printTimestamp(outputPath, "Starting")
 
     # outputFilesNames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(math.ceil(nrOfPages / bucketSize))]
     # outputFiles = [file_utils.output_writer(path=filename, compression=compression) for filename in outputFilesNames]
@@ -113,10 +113,11 @@ def sortFiles(
             if (nobjs-1) % NPRINTREVISION == 0:
                 utils.dot()
             nobjs += 1
+            if nobjs > 100000:
+                break
 
         dump.close()
-        utils.log(f"Done Analyzing {inputFile}.\n")
-        print(datetime.now().strftime("%H:%M:%S"))
+        printTimestamp(outputPath, f"Done Analyzing {inputFile}.")
 
 
     # Closing output files
@@ -126,16 +127,16 @@ def sortFiles(
     # Sort files
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         # executor.map(sort, outputFilesNames)
-        executor.map(lambda f: sort(f, compression), outputFilesNames)
+        executor.map(lambda f: sort(f, compression, outputPath), outputFilesNames)
         #executor.submit()
 
     # for filename in outputFilesNames:
     #     sort(filename, compression)
 
-    print(datetime.now().strftime("%H:%M:%S"))
+    printTimestamp(outputPath, f"All done!")
 
 
-def sort(filename: str, compression: str):
+def sort(filename: str, compression: str, outputPath: str):
 
     utils.log(f"Sorting {filename}")
     if compression is None:
@@ -146,4 +147,11 @@ def sort(filename: str, compression: str):
         compressor = 'gzip'
         #os.system(f"{' '.join(compressCat)} {filename} | sort -o {filename.replace('bucket', 'sorted-bucket')}")
         os.system(f"{' '.join(compressCat)} {filename} | sort | {compressor} > {filename.replace('bucket', 'sorted-bucket')}")
-    utils.log(f"Done sorting {filename}\n")
+    printTimestamp(outputPath, f"Done sorting {filename}.")
+
+
+def printTimestamp(outputPath: Path, description: str) -> None:
+    with open(str(outputPath / "times.txt"), "a") as f:
+        line = f'{datetime.now().strftime("%H:%M:%S")}: {description}\n'
+        f.write(line)
+        print(line)
