@@ -86,7 +86,7 @@ def sortFiles(
             #obj = types.cast_json(raw_obj)
             #obj["timestamp"] = obj["timestamp"].isoformat()
 
-            bucketNumber = getBucketNumberByPage(obj, bucketSize)
+            bucketNumber = getBucketNumberByUsername(obj, bucketSize)
 
             if bucketNumber >= len(outputFiles):
                 newFilenames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(len(outputFiles), bucketNumber + 1)]
@@ -94,7 +94,7 @@ def sortFiles(
                 outputFilesNames.extend(newFilenames)
                 outputFiles.extend(newOutputFiles)
 
-            outputFiles[bucketNumber].write(f"{comparatorStringByPage(obj)}\t{json.dumps(obj)}\n")
+            outputFiles[bucketNumber].write(f"{comparatorStringByUsername(obj)}\t{json.dumps(obj)}\n")
 
             if (nobjs-1) % NPRINTREVISION == 0:
                 utils.dot()
