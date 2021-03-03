@@ -42,7 +42,12 @@ def get_args():
         default=200000,
         help='Bucket size'
     )
-
+    parser.add_argument(
+        '--sort-by',
+        choices={'user', 'page'},
+        required=True,
+        help='Sorting field'
+    )
 
     parsed_args = parser.parse_args()
     return parsed_args
@@ -59,7 +64,8 @@ def main():
         inputFiles=args.files,
         outputPath=args.output_dir_path,
         bucketSize=args.bucket_size,
-        compression=args.output_compression
+        compression=args.output_compression,
+        sortBy=args.sort_by
     )
 
 

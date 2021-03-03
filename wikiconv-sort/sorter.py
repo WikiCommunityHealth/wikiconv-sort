@@ -29,7 +29,6 @@ def getBucketNumberByUsername(obj: Mapping, bucketSize: int) -> int:
     else:
         return 0
 
-
 def comparatorStringByUsername(obj: Mapping) -> str:
     idSegments = obj['id'].split('.')
     par0 = "000000000"
@@ -60,11 +59,22 @@ def comparatorStringByPage(obj: Mapping) -> str:
     
     return f"{par0} {par1} {par2} {par3}"
 
+COMPARATORS = {
+    'page': comparatorStringByPage,
+    'user': comparatorStringByUsername
+}
+
+BUCKET_NUMBER = {
+    'page': getBucketNumberByPage,
+    'user': getBucketNumberByUsername
+}
+
 def sortFiles(
         inputFiles: Iterable[Path],
         outputPath: Path,
         bucketSize: int,
         compression: str,
+        sortBy: str
     ) -> None:
 
     print(datetime.now().strftime("%H:%M:%S"))
@@ -73,6 +83,10 @@ def sortFiles(
     # outputFiles = [file_utils.output_writer(path=filename, compression=compression) for filename in outputFilesNames]
     outputFilesNames = []
     outputFiles = []
+
+    getBucketNumber = BUCKET_NUMBER[sortBy]
+    comparatorString = COMPARATORS[sortBy]
+
 
     # Split dump
     for inputFile in inputFiles:
@@ -86,7 +100,7 @@ def sortFiles(
             #obj = types.cast_json(raw_obj)
             #obj["timestamp"] = obj["timestamp"].isoformat()
 
-            bucketNumber = getBucketNumberByUsername(obj, bucketSize)
+            bucketNumber = getBucketNumber(obj, bucketSize)
 
             if bucketNumber >= len(outputFiles):
                 newFilenames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(len(outputFiles), bucketNumber + 1)]
@@ -94,7 +108,7 @@ def sortFiles(
                 outputFilesNames.extend(newFilenames)
                 outputFiles.extend(newOutputFiles)
 
-            outputFiles[bucketNumber].write(f"{comparatorStringByUsername(obj)}\t{json.dumps(obj)}\n")
+            outputFiles[bucketNumber].write(f"{comparatorString(obj)}\t{json.dumps(obj)}\n")
 
             if (nobjs-1) % NPRINTREVISION == 0:
                 utils.dot()
