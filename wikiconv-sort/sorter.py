@@ -18,7 +18,39 @@ EXTENSIONS = {
 }
 NPRINTREVISION = 10000
 
-def comparatorString(obj: Mapping) -> str:
+def getBucketNumberByUsername(obj: Mapping, bucketSize: int) -> int:
+    if 'user' not in obj:
+        return 0
+    user = obj['user']
+    if 'ip' in user:
+        return 1
+    elif 'id' in user:
+        return math.floor(int(obj['user']['id']) / bucketSize) + 2
+    else:
+        return 0
+
+
+def comparatorStringByUsername(obj: Mapping) -> str:
+    idSegments = obj['id'].split('.')
+    par0 = "000000000"
+
+    if 'user' in obj:
+        user = obj['user']
+        if 'ip' in user:
+            par0 = "".join([x.zfill(3) for x in obj['user']['ip'].split(".")])
+        elif 'id' in user:
+            par0 = obj['user']['id'].zfill(12)
+
+    par1 = obj['timestamp']
+    par2 = idSegments[1].zfill(8)
+    par3 = idSegments[2].zfill(8)
+    
+    return f"{par0} {par1} {par2} {par3}"
+
+def getBucketNumberByPage(obj: Mapping, bucketSize: int) -> int:
+    return math.floor(int(obj['pageId']) / bucketSize)
+
+def comparatorStringByPage(obj: Mapping) -> str:
     idSegments = obj['id'].split('.')
 
     par0 = obj['pageId'].zfill(9)
@@ -54,7 +86,7 @@ def sortFiles(
             #obj = types.cast_json(raw_obj)
             #obj["timestamp"] = obj["timestamp"].isoformat()
 
-            bucketNumber = math.floor(int(obj['pageId']) / bucketSize)
+            bucketNumber = getBucketNumberByPage(obj, bucketSize)
 
             if bucketNumber >= len(outputFiles):
                 newFilenames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(len(outputFiles), bucketNumber + 1)]
@@ -62,7 +94,7 @@ def sortFiles(
                 outputFilesNames.extend(newFilenames)
                 outputFiles.extend(newOutputFiles)
 
-            outputFiles[bucketNumber].write(f"{comparatorString(obj)}\t{json.dumps(obj)}\n")
+            outputFiles[bucketNumber].write(f"{comparatorStringByPage(obj)}\t{json.dumps(obj)}\n")
 
             if (nobjs-1) % NPRINTREVISION == 0:
                 utils.dot()
