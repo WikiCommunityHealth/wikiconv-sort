@@ -18,27 +18,27 @@ EXTENSIONS = {
 }
 NPRINTREVISION = 10000
 
-def getBucketNumberByUsername(obj: Mapping, bucketSize: int) -> int:
-    if 'user' not in obj:
+def getBucketNumberByUsername(obj: Mapping, bucketSize: int, userField: str = 'user') -> int:
+    if userField not in obj:
         return 0
-    user = obj['user']
+    user = obj[userField]
     if 'ip' in user:
         return 1
     elif 'id' in user:
-        return math.floor(int(obj['user']['id']) / bucketSize) + 2
+        return math.floor(int(obj[userField]['id']) / bucketSize) + 2
     else:
         return 0
 
-def comparatorStringByUsername(obj: Mapping) -> str:
+def comparatorStringByUsername(obj: Mapping, userField: str = 'user') -> str:
     idSegments = obj['id'].split('.')
     par0 = "000000000"
 
-    if 'user' in obj:
-        user = obj['user']
+    if userField in obj:
+        user = obj[userField]
         if 'ip' in user:
             par0 = "".join([x.zfill(3) for x in obj['user']['ip'].split(".")])
         elif 'id' in user:
-            par0 = obj['user']['id'].zfill(12)
+            par0 = obj[userField]['id'].zfill(12)
 
     par1 = obj['timestamp']
     par2 = idSegments[1].zfill(8)
@@ -61,12 +61,14 @@ def comparatorStringByPage(obj: Mapping) -> str:
 
 COMPARATORS = {
     'page': comparatorStringByPage,
-    'user': comparatorStringByUsername
+    'user': comparatorStringByUsername,
+    'replyTo': lambda obj: comparatorStringByUsername(obj, 'replyTo')
 }
 
 BUCKET_NUMBER = {
     'page': getBucketNumberByPage,
-    'user': getBucketNumberByUsername
+    'user': getBucketNumberByUsername,
+    'replyTo': lambda obj, bucketSize: getBucketNumberByUsername(obj, bucketSize, 'replyTo')
 }
 
 def sortFiles(
