@@ -24,6 +24,11 @@ def get_args():
         help='XML output directory.',
     )
     parser.add_argument(
+        'sort_by',
+        choices={'user', 'page', 'replyToUser'},
+        help='Sorting field'
+    )
+    parser.add_argument(
         '--output-compression',
         choices={None, '7z', 'bz2', 'gz'},
         required=False,
@@ -42,12 +47,6 @@ def get_args():
         default=200000,
         help='Bucket size'
     )
-    parser.add_argument(
-        '--sort-by',
-        choices={'user', 'page'},
-        required=True,
-        help='Sorting field'
-    )
 
     parsed_args = parser.parse_args()
     return parsed_args
@@ -59,6 +58,7 @@ def main():
 
     if not args.output_dir_path.exists():
         args.output_dir_path.mkdir(parents=True)
+    print(args)
 
     sorter.sortFiles(
         inputFiles=args.files,
@@ -71,3 +71,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# python -m wikiconv-sort /files . replyToUser --output-compression gz
