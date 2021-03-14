@@ -26,6 +26,9 @@ def getBucketNumberByUsername(obj: Mapping, bucketSize: int, userField: str = 'u
     if user == "root" or user == "unknown":
         return -1
 
+    if user is None:
+        print(obj)
+
     if 'ip' in user:
         return 1
     elif 'id' in user:
