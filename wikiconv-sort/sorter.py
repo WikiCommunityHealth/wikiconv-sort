@@ -36,7 +36,7 @@ def comparatorStringByUsername(obj: Mapping, userField: str = 'user') -> str:
     if userField in obj:
         user = obj[userField]
         if 'ip' in user:
-            par0 = "".join([x.zfill(3) for x in obj['user']['ip'].split(".")])
+            par0 = "".join([x.zfill(3) for x in obj[userField]['ip'].split(".")])
         elif 'id' in user:
             par0 = obj[userField]['id'].zfill(12)
 
