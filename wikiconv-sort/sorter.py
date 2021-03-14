@@ -62,13 +62,13 @@ def comparatorStringByPage(obj: Mapping) -> str:
 COMPARATORS = {
     'page': comparatorStringByPage,
     'user': comparatorStringByUsername,
-    'replyTo': lambda obj: comparatorStringByUsername(obj, 'replyTo')
+    'replyToUser': lambda obj: comparatorStringByUsername(obj, 'replyToUser')
 }
 
 BUCKET_NUMBER = {
     'page': getBucketNumberByPage,
     'user': getBucketNumberByUsername,
-    'replyTo': lambda obj, bucketSize: getBucketNumberByUsername(obj, bucketSize, 'replyTo')
+    'replyToUser': lambda obj, bucketSize: getBucketNumberByUsername(obj, bucketSize, 'replyToUser')
 }
 
 def sortFiles(
