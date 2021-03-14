@@ -125,7 +125,7 @@ def sortFiles(
         f.close()
 
     # Sort files
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         # executor.map(sort, outputFilesNames)
         executor.map(lambda f: sort(f, compression, outputPath), outputFilesNames)
         #executor.submit()
