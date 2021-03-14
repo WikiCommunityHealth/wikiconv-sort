@@ -27,9 +27,8 @@ def getBucketNumberByUsername(obj: Mapping, bucketSize: int, userField: str = 'u
         return -1
 
     if user is None:
-        print(obj)
-
-    if 'ip' in user:
+        return 0
+    elif 'ip' in user:
         return 1
     elif 'id' in user:
         return math.floor(int(obj[userField]['id']) / bucketSize) + 2
