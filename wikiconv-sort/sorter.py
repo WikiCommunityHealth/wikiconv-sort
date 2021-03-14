@@ -143,6 +143,7 @@ def sortFiles(
 def sort(filename: str, compression: str, outputPath: str):
 
     utils.log(f"Sorting {filename}")
+    printTimestamp(outputPath, f"Sorting {filename}.")
     if compression is None:
         os.system(f"sort {filename} -o {filename.replace('bucket', 'sorted-bucket')}")
     else:

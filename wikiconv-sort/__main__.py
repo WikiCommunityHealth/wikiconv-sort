@@ -58,7 +58,6 @@ def main():
 
     if not args.output_dir_path.exists():
         args.output_dir_path.mkdir(parents=True)
-    print(args)
 
     sorter.sortFiles(
         inputFiles=args.files,
