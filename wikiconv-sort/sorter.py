@@ -21,7 +21,11 @@ NPRINTREVISION = 10000
 def getBucketNumberByUsername(obj: Mapping, bucketSize: int, userField: str = 'user') -> int:
     if userField not in obj:
         return 0
+    
     user = obj[userField]
+    if user == "root" or user == "unknown":
+        return -1
+
     if 'ip' in user:
         return 1
     elif 'id' in user:
@@ -103,14 +107,14 @@ def sortFiles(
             #obj["timestamp"] = obj["timestamp"].isoformat()
 
             bucketNumber = getBucketNumber(obj, bucketSize)
+            if bucketNumber > 0:
+                if bucketNumber >= len(outputFiles):
+                    newFilenames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(len(outputFiles), bucketNumber + 1)]
+                    newOutputFiles = [file_utils.output_writer(path=filename, compression=compression) for filename in newFilenames]
+                    outputFilesNames.extend(newFilenames)
+                    outputFiles.extend(newOutputFiles)
 
-            if bucketNumber >= len(outputFiles):
-                newFilenames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(len(outputFiles), bucketNumber + 1)]
-                newOutputFiles = [file_utils.output_writer(path=filename, compression=compression) for filename in newFilenames]
-                outputFilesNames.extend(newFilenames)
-                outputFiles.extend(newOutputFiles)
-
-            outputFiles[bucketNumber].write(f"{comparatorString(obj)}\t{json.dumps(obj)}\n")
+                outputFiles[bucketNumber].write(f"{comparatorString(obj)}\t{json.dumps(obj)}\n")
 
             if (nobjs-1) % NPRINTREVISION == 0:
                 utils.dot()
