@@ -25,8 +25,10 @@ def getBucketNumberByDate(obj: Mapping, bucketSize: int) -> int:
 
 def comparatorStringByDate(obj: Mapping) -> str:
     timestamp = obj['timestamp']
+    year = int(timestamp[:4])
+    month = int(timestamp[5:7])
     id = obj['id']
-    return f"{timestamp} {id}"
+    return f"{year * 100 + month} {timestamp} {id}"
 
 def getBucketNumberByUsername(obj: Mapping, bucketSize: int, userField: str = 'user') -> int:
     if userField not in obj:
