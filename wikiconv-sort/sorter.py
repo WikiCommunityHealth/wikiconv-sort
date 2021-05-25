@@ -18,6 +18,16 @@ EXTENSIONS = {
 }
 NPRINTREVISION = 10000
 
+def getBucketNumberByDate(obj: Mapping, bucketSize: int) -> int:
+    year = int(obj['timestamp'][:4])
+    month = int(obj['timestamp'][5:7])
+    return ((year - 2000) * 12) + (month - 1)
+
+def comparatorStringByDate(obj: Mapping) -> str:
+    timestamp = obj['timestamp']
+    id = obj['id']
+    return f"{timestamp} {id}"
+
 def getBucketNumberByUsername(obj: Mapping, bucketSize: int, userField: str = 'user') -> int:
     if userField not in obj:
         return 0
@@ -66,16 +76,24 @@ def comparatorStringByPage(obj: Mapping) -> str:
     return f"{par0} {par1} {par2} {par3}"
 
 COMPARATORS = {
+    'date': comparatorStringByDate,
     'page': comparatorStringByPage,
     'user': comparatorStringByUsername,
     'replyToUser': lambda obj: comparatorStringByUsername(obj, 'replyToUser')
 }
 
 BUCKET_NUMBER = {
+    'date': getBucketNumberByDate,
     'page': getBucketNumberByPage,
     'user': getBucketNumberByUsername,
     'replyToUser': lambda obj, bucketSize: getBucketNumberByUsername(obj, bucketSize, 'replyToUser')
 }
+
+def fileIndex(i: int, sortBy: str) -> str:
+    if sortBy == 'date':
+        return f"{str(i//12 + 2000).zfill(4)}{str(i%12+1).zfill(2)}"
+    else:
+        return str(i).zfill(4)
 
 def sortFiles(
         inputFiles: Iterable[Path],
@@ -111,7 +129,7 @@ def sortFiles(
             bucketNumber = getBucketNumber(obj, bucketSize)
             if bucketNumber > 0:
                 if bucketNumber >= len(outputFiles):
-                    newFilenames = [str(outputPath / (f"bucket-{str(i).zfill(4)}.json")) for i in range(len(outputFiles), bucketNumber + 1)]
+                    newFilenames = [str(outputPath / (f"tosort-wikiconv-sort-{sortBy}-{fileIndex(i, sortBy)}.json")) for i in range(len(outputFiles), bucketNumber + 1)]
                     newOutputFiles = [file_utils.output_writer(path=filename, compression=compression) for filename in newFilenames]
                     outputFilesNames.extend(newFilenames)
                     outputFiles.extend(newOutputFiles)
@@ -147,13 +165,13 @@ def sort(filename: str, compression: str, outputPath: str):
     utils.log(f"Sorting {filename}")
     printTimestamp(outputPath, f"Sorting {filename}.")
     if compression is None:
-        os.system(f"sort {filename} -o {filename.replace('bucket', 'sorted-bucket')}")
+        os.system(f"sort {filename} -o {filename.replace('tosort-wikiconv', 'wikiconv')}")
     else:
         filename += '.' + compression
         compressCat = EXTENSIONS.get(compression, ['cat'])
         compressor = 'gzip'
         #os.system(f"{' '.join(compressCat)} {filename} | sort -o {filename.replace('bucket', 'sorted-bucket')}")
-        os.system(f"{' '.join(compressCat)} {filename} | sort | {compressor} > {filename.replace('bucket', 'sorted-bucket')}")
+        os.system(f"{' '.join(compressCat)} {filename} | sort | {compressor} > {filename.replace('tosort-wikiconv', 'wikiconv')}")
     printTimestamp(outputPath, f"Done sorting {filename}.")
 
 

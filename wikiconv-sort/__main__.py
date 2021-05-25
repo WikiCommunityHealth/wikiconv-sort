@@ -25,7 +25,7 @@ def get_args():
     )
     parser.add_argument(
         'sort_by',
-        choices={'user', 'page', 'replyToUser'},
+        choices={ 'user', 'page', 'replyToUser', 'date' },
         help='Sorting field'
     )
     parser.add_argument(
